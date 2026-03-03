@@ -13,6 +13,7 @@ from ..client import restart_account
 
 @Client.on_message(filters.command(["string"]) & filters.user(config.config.owner_ids))
 async def set_string_session(client: Client, message):
+	print("recieved change req")
 	DATA = open_config()
 	if len(message.command) < 2:
 		await client.send_message(message.chat.id, "__Usage__: `/string NEW_STRING_SESSION`", reply_to_message_id=message.id)
@@ -27,7 +28,7 @@ async def set_string_session(client: Client, message):
 
 
 @Client.on_message(filters.command(["addaccess"]) & filters.user(config.config.owner_ids))
-async def set_string_session(client: Client, message):
+async def add_access(client: Client, message):
 	DATA = open_config()
 	if len(message.command) < 2:
 		await client.send_message(message.chat.id, "__Usage__: `/addaccess {user_id}`", reply_to_message_id=message.id)
