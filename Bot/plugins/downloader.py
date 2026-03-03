@@ -129,7 +129,7 @@ async def handle_private(message, chatid, msgid):
 
 
 
-@Client.on_message(filters.regex(r"^(?:https?://)?t\.me/[A-Za-z0-9_+/]+$") & filters.user(config.config.owner_ids))
+@Client.on_message(filters.regex(r"^(?:https?://)?t\.me/.+$") & filters.user(config.config.owner_ids))
 async def save(client: Client, message):
 	print(message.text)
 	acc = mclient.acc 
