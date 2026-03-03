@@ -46,3 +46,19 @@ https://t.me/c/xxxx/101 - 120
 ```
 
 _note that space in between doesn't matter_
+
+__ADDING ACCESS & CHANGING STRING SESSION__ 
+
+__For adding access - use:__
+
+```
+/addaccess {user_id}
+```
+
+__For changing string session - use:__
+
+```
+/string {new_string}
+```
+
+__Both of the above no longer need restart - thanks to asyncio__ 
