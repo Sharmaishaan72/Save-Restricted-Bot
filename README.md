@@ -62,3 +62,6 @@ __For changing string session - use:__
 ```
 
 __Both of the above no longer need restart - thanks to asyncio__ 
+
+**Custom Thumbnail**
+__reply with /setthumb to a picture , all the downloaded media will be sent with that thumbnail , use /delthumb to make it default again__

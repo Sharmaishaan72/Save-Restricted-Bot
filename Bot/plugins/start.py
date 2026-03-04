@@ -38,18 +38,19 @@ __note that space in between doesn't matter__
 
 **ADDING ACCESS & CHANGING STRING SESSION**
 __For adding access - use:__
-
 ```
 /addaccess {user_id}
 ```
 
 __For changing string session - use:__
-
 ```
 /string {new_string}
 ```
 
 __Both of the above no longer need restart - thanks to asyncio__ 
+
+**Custom Thumbnail**
+__reply with /setthumb to a picture , all the downloaded media will be sent with that thumbnail , use /delthumb to make it default again__
 """
 
 @Client.on_message(filters.command(["start"]))
