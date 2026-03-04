@@ -30,6 +30,7 @@ def format_eta(seconds: float) -> str:
 
 # status writers
 
+import asyncio
 import time
 import os
 
@@ -61,7 +62,11 @@ def downstatus(statusfile: str, message):
 				f"⚡ Speed: `{human_size(speed)}/s`\n"
 				f"⏳ ETA:   `{format_eta(eta)}`"
 			)
-			bot.edit_message_text(message.chat.id, message.id, text)
+			future = asyncio.run_coroutine_threadsafe(
+				bot.edit_message_text(message.chat.id, message.id, text),
+				bot.loop
+			)
+			future.result(timeout=10)
 		except Exception:
 			pass
 		time.sleep(10)
@@ -92,7 +97,11 @@ def upstatus(statusfile: str, message):
 				f"⚡ Speed: `{human_size(speed)}/s`\n"
 				f"⏳ ETA:   `{format_eta(eta)}`"
 			)
-			bot.edit_message_text(message.chat.id, message.id, text)
+			future = asyncio.run_coroutine_threadsafe(
+				bot.edit_message_text(message.chat.id, message.id, text),
+				bot.loop
+			)
+			future.result(timeout=10)
 		except Exception:
 			pass
 		time.sleep(10)
