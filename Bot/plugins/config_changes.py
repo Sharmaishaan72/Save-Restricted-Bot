@@ -9,9 +9,11 @@ from pyrogram import filters
 from .. import config 
 from ..config import open_config
 from ..client import restart_account
+from ..wrappers.access_only import access_only
 
 
-@Client.on_message(filters.command(["string"]) & filters.user(config.config.owner_ids))
+@Client.on_message(filters.command(["string"]))
+@access_only
 async def set_string_session(client: Client, message):
 	print("recieved change req")
 	DATA = open_config()
@@ -27,7 +29,8 @@ async def set_string_session(client: Client, message):
 	await msg.edit("**String session Updated successfully!**")
 
 
-@Client.on_message(filters.command(["addaccess"]) & filters.user(config.config.owner_ids))
+@Client.on_message(filters.command(["addaccess"]))
+@access_only
 async def add_access(client: Client, message):
 	DATA = open_config()
 	if len(message.command) < 2:
@@ -41,6 +44,7 @@ async def add_access(client: Client, message):
 	config.config.reload_env()
 	await msg.edit("**list updated! They can access the bot now**")
 	await client.send_message(int(message.command[1].strip()), "You have been allowed to access the bot by the owner , you can use it now")
+	print(config.config.owner_ids)
 
 
 

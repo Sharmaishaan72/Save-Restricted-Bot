@@ -5,11 +5,13 @@ import os
 from pyrogram import Client, filters
 
 from .. import config
+from ..wrappers.access_only import access_only
 
 THUMB_PATH = "thumb.jpg"
 
 
-@Client.on_message(filters.command(["setthumb"]) & filters.user(config.config.owner_ids))
+@Client.on_message(filters.command(["setthumb"]))
+@access_only
 async def set_thumb(client: Client, message):
 	if not message.reply_to_message or not message.reply_to_message.photo:
 		await client.send_message(
@@ -30,7 +32,8 @@ async def set_thumb(client: Client, message):
 	await msg.edit("**✅ Custom thumbnail set!** All future videos/documents will use it.")
 
 
-@Client.on_message(filters.command(["delthumb"]) & filters.user(config.config.owner_ids))
+@Client.on_message(filters.command(["delthumb"]))
+@access_only
 async def del_thumb(client: Client, message):
 	if os.path.exists(THUMB_PATH):
 		os.remove(THUMB_PATH)

@@ -12,6 +12,7 @@ from pyrogram.errors import UserAlreadyParticipant, InviteHashExpired, UsernameN
 from .. import config 
 from .. import client as mclient 
 from ..utils.progress import progress, _progress_state
+from ..wrappers.access_only import access_only
 
 bot = mclient.bot
 
@@ -122,7 +123,8 @@ async def handle_private(message, chatid, msgid):
 
 
 
-@Client.on_message(filters.regex(r"^(?:https?://)?t\.me/.+$") & filters.user(config.config.owner_ids))
+@Client.on_message(filters.regex(r"^(?:https?://)?t\.me/.+$"))
+@access_only
 async def save(client: Client, message):
 	print(message.text)
 	acc = mclient.acc 

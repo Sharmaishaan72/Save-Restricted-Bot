@@ -4,6 +4,7 @@ from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from .. import config 
+from ..wrappers.access_only import access_only
 
 
 USAGE = """**FOR PUBLIC CHATS**
@@ -51,7 +52,8 @@ __For changing string session - use:__
 __Both of the above no longer need restart - thanks to asyncio__ 
 """
 
-@Client.on_message(filters.command(["start"]) & filters.user(config.config.owner_ids))
+@Client.on_message(filters.command(["start"]))
+@access_only
 async def send_start(client: pyrogram.client.Client, message: pyrogram.types.messages_and_media.message.Message):
 	await client.send_message(
 		message.chat.id,
