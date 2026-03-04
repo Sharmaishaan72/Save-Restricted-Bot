@@ -2,7 +2,6 @@
 
 import os
 import time
-import threading
 
 from pyrogram import Client
 from pyrogram import filters
@@ -11,7 +10,6 @@ from pyrogram.errors import UserAlreadyParticipant, InviteHashExpired, UsernameN
 from .. import config 
 from .. import client as mclient 
 from ..utils.progress import progress, _progress_state
-from ..utils.helpers import upstatus, downstatus
 
 bot = mclient.bot
 
@@ -49,31 +47,15 @@ async def handle_private(message, chatid, msgid):
 
 	smsg = await bot.send_message(message.chat.id, '__Downloading__\n\n`Starting...`', reply_to_message_id=message.id)
 
-	dosta = threading.Thread(
-		target=lambda: downstatus(f'{message.id}downstatus.txt', smsg),
-		daemon=True
-	)
-	dosta.start()
-
 	file = await acc.download_media(
 		msg,
 		progress=progress,
-		progress_args=[message, "down"]
+		progress_args=[message, smsg, "down"]
 	)
 
-	# Clean up download status
-	down_status_file = f'{message.id}downstatus.txt'
-	if os.path.exists(down_status_file):
-		os.remove(down_status_file)
 	_progress_state.pop(f"{message.id}down", None)
 
-	await bot.edit_message_text(smsg.chat.id, smsg.id, '__Uploading__\n\n`Starting...`')
-
-	upsta = threading.Thread(
-		target=lambda: upstatus(f'{message.id}upstatus.txt', smsg),
-		daemon=True
-	)
-	upsta.start()
+	await smsg.edit_text('__Uploading__\n\n`Starting...`')
 
 	caption          = msg.caption if msg.caption else ""
 	caption_entities = msg.caption_entities if msg.caption_entities else None
@@ -82,7 +64,7 @@ async def handle_private(message, chatid, msgid):
 		try: thumb = await acc.download_media(msg.document.thumbs[0].file_id)
 		except: thumb = None
 		await bot.send_document(message.chat.id, file, thumb=thumb, caption=caption, caption_entities=caption_entities,
-		                  reply_to_message_id=message.id, progress=progress, progress_args=[message, "up"])
+		                  reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
 		if thumb: os.remove(thumb)
 
 	elif msg_type == "Video":
@@ -90,7 +72,7 @@ async def handle_private(message, chatid, msgid):
 		except: thumb = None
 		await bot.send_video(message.chat.id, file, duration=msg.video.duration, width=msg.video.width,
 		               height=msg.video.height, thumb=thumb, caption=caption, caption_entities=caption_entities,
-		               reply_to_message_id=message.id, progress=progress, progress_args=[message, "up"])
+		               reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
 		if thumb: os.remove(thumb)
 
 	elif msg_type == "Animation":
@@ -104,14 +86,14 @@ async def handle_private(message, chatid, msgid):
 		try: thumb = await acc.download_media(msg.voice.thumbs[0].file_id) if hasattr(msg.voice, 'thumbs') and msg.voice.thumbs else None
 		except: thumb = None
 		await bot.send_voice(message.chat.id, file, caption=caption, thumb=thumb, caption_entities=caption_entities,
-		               reply_to_message_id=message.id, progress=progress, progress_args=[message, "up"])
+		               reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
 		if thumb: os.remove(thumb)
 
 	elif msg_type == "Audio":
 		try: thumb = await acc.download_media(msg.audio.thumbs[0].file_id)
 		except: thumb = None
 		await bot.send_audio(message.chat.id, file, caption=caption, caption_entities=caption_entities,
-		               reply_to_message_id=message.id, progress=progress, progress_args=[message, "up"])
+		               reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
 		if thumb: os.remove(thumb)
 
 	elif msg_type == "Photo":
@@ -120,9 +102,6 @@ async def handle_private(message, chatid, msgid):
 
 	os.remove(file)
 
-	up_status_file = f'{message.id}upstatus.txt'
-	if os.path.exists(up_status_file):
-		os.remove(up_status_file)
 	_progress_state.pop(f"{message.id}up", None)
 
 	await bot.delete_messages(message.chat.id, [smsg.id])

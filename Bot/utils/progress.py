@@ -1,44 +1,63 @@
-# ── progress callback ─────────────────────────────────────────────────────────
+# ── progress callback (fully async) ───────────────────────────────────────────
 
 import time
 
-# We keep a small dict to track start-time & last-sample per transfer ID so we
-# can compute a rolling speed rather than an instantaneous one.
+from .helpers import human_size, make_progress_bar, format_eta
+
+# Tracks per-transfer state: speed calculation + last Telegram edit time
 _progress_state: dict = {}
 
-def progress(current: int, total: int, message, transfer_type: str):
+async def progress(current: int, total: int, message, smsg, transfer_type: str):
 	"""
-	Called by Pyrogram on every chunk.  Writes a pipe-separated status file:
-	  percentage|current|total|speed_bytes_per_sec|eta_seconds
+	Async progress callback for Pyrogram download/upload.
+	Edits `smsg` directly with a live progress bar.
+
+	Rate-limited to one Telegram edit every 5 seconds to avoid flood errors.
+
+	progress_args should be: [message, smsg, "down"/"up"]
 	"""
 	key = f"{message.id}{transfer_type}"
 	now = time.time()
 
-	if key not in _progress_state or current < _progress_state[key]["last_current"]:
-		# New transfer or restart
+	if key not in _progress_state:
 		_progress_state[key] = {
 			"start_time":   now,
 			"last_time":    now,
 			"last_current": current,
 			"speed":        0.0,
+			"last_edit":    0.0,
 		}
 
-	state = _progress_state[key]
+	state   = _progress_state[key]
 	elapsed = now - state["last_time"]
 
-	if elapsed >= 1.0:  # update speed every second
-		delta_bytes = current - state["last_current"]
-		speed = delta_bytes / elapsed if elapsed > 0 else 0.0
-		state["speed"]        = speed
+	# Update rolling speed once per second
+	if elapsed >= 1.0:
+		delta          = current - state["last_current"]
+		state["speed"] = delta / elapsed if elapsed > 0 else 0.0
 		state["last_time"]    = now
 		state["last_current"] = current
-	else:
-		speed = state["speed"]
 
-	pct = current * 100 / total if total else 0
-	remaining = total - current
-	eta = remaining / speed if speed > 0 else -1.0
+	# Rate-limit Telegram edits to once every 5 seconds
+	if now - state["last_edit"] < 5:
+		return
 
-	filename = f"{key}status.txt"
-	with open(filename, "w") as f:
-		f.write(f"{pct:.1f}|{current}|{total}|{speed:.1f}|{eta:.1f}")
+	speed = state["speed"]
+	pct   = current * 100 / total if total else 0
+	eta   = (total - current) / speed if speed > 0 else -1.0
+	label = "__Downloading__" if transfer_type == "down" else "__Uploading__"
+	bar   = make_progress_bar(pct)
+
+	text = (
+		f"{label}\n\n"
+		f"{bar}\n"
+		f"`{human_size(current)} / {human_size(total)}`\n"
+		f"⚡ Speed: `{human_size(speed)}/s`\n"
+		f"⏳ ETA:   `{format_eta(eta)}`"
+	)
+
+	try:
+		await smsg.edit_text(text)
+		state["last_edit"] = now
+	except Exception:
+		pass
