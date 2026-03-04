@@ -1,6 +1,8 @@
 # all downloader commands
 
 import os
+
+CUSTOM_THUMB = "thumb.jpg"
 import time
 
 from pyrogram import Client
@@ -61,19 +63,25 @@ async def handle_private(message, chatid, msgid):
 	caption_entities = msg.caption_entities if msg.caption_entities else None
 
 	if msg_type == "Document":
-		try: thumb = await acc.download_media(msg.document.thumbs[0].file_id)
-		except: thumb = None
+		if os.path.exists(CUSTOM_THUMB):
+			thumb, thumb_downloaded = CUSTOM_THUMB, False
+		else:
+			try: thumb, thumb_downloaded = await acc.download_media(msg.document.thumbs[0].file_id), True
+			except: thumb, thumb_downloaded = None, False
 		await bot.send_document(message.chat.id, file, thumb=thumb, caption=caption, caption_entities=caption_entities,
 		                  reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
-		if thumb: os.remove(thumb)
+		if thumb and thumb_downloaded: os.remove(thumb)
 
 	elif msg_type == "Video":
-		try: thumb = await acc.download_media(msg.video.thumbs[0].file_id)
-		except: thumb = None
+		if os.path.exists(CUSTOM_THUMB):
+			thumb, thumb_downloaded = CUSTOM_THUMB, False
+		else:
+			try: thumb, thumb_downloaded = await acc.download_media(msg.video.thumbs[0].file_id), True
+			except: thumb, thumb_downloaded = None, False
 		await bot.send_video(message.chat.id, file, duration=msg.video.duration, width=msg.video.width,
 		               height=msg.video.height, thumb=thumb, caption=caption, caption_entities=caption_entities,
 		               reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
-		if thumb: os.remove(thumb)
+		if thumb and thumb_downloaded: os.remove(thumb)
 
 	elif msg_type == "Animation":
 		await bot.send_animation(message.chat.id, file, caption=caption, caption_entities=caption_entities,
@@ -83,18 +91,24 @@ async def handle_private(message, chatid, msgid):
 		await bot.send_sticker(message.chat.id, file, reply_to_message_id=message.id)
 
 	elif msg_type == "Voice":
-		try: thumb = await acc.download_media(msg.voice.thumbs[0].file_id) if hasattr(msg.voice, 'thumbs') and msg.voice.thumbs else None
-		except: thumb = None
+		if os.path.exists(CUSTOM_THUMB):
+			thumb, thumb_downloaded = CUSTOM_THUMB, False
+		else:
+			try: thumb, thumb_downloaded = (await acc.download_media(msg.voice.thumbs[0].file_id), True) if hasattr(msg.voice, 'thumbs') and msg.voice.thumbs else (None, False)
+			except: thumb, thumb_downloaded = None, False
 		await bot.send_voice(message.chat.id, file, caption=caption, thumb=thumb, caption_entities=caption_entities,
 		               reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
-		if thumb: os.remove(thumb)
+		if thumb and thumb_downloaded: os.remove(thumb)
 
 	elif msg_type == "Audio":
-		try: thumb = await acc.download_media(msg.audio.thumbs[0].file_id)
-		except: thumb = None
+		if os.path.exists(CUSTOM_THUMB):
+			thumb, thumb_downloaded = CUSTOM_THUMB, False
+		else:
+			try: thumb, thumb_downloaded = await acc.download_media(msg.audio.thumbs[0].file_id), True
+			except: thumb, thumb_downloaded = None, False
 		await bot.send_audio(message.chat.id, file, caption=caption, caption_entities=caption_entities,
 		               reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
-		if thumb: os.remove(thumb)
+		if thumb and thumb_downloaded: os.remove(thumb)
 
 	elif msg_type == "Photo":
 		await bot.send_photo(message.chat.id, file, caption=caption, caption_entities=caption_entities,

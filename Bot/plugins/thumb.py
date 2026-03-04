@@ -1,0 +1,39 @@
+# thumbnail management commands
+
+import os
+
+from pyrogram import Client, filters
+
+from .. import config
+
+THUMB_PATH = "thumb.jpg"
+
+
+@Client.on_message(filters.command(["setthumb"]) & filters.user(config.config.owner_ids))
+async def set_thumb(client: Client, message):
+	if not message.reply_to_message or not message.reply_to_message.photo:
+		await client.send_message(
+			message.chat.id,
+			"__Reply to a **photo** with /setthumb to set it as the custom thumbnail.__",
+			reply_to_message_id=message.id
+		)
+		return
+
+	msg = await client.send_message(message.chat.id, "__Downloading thumbnail...__", reply_to_message_id=message.id)
+
+	# Download the replied-to photo to a temp path, then rename to thumb.jpg
+	downloaded = await client.download_media(message.reply_to_message.photo.file_id)
+	if os.path.exists(THUMB_PATH):
+		os.remove(THUMB_PATH)
+	os.rename(downloaded, THUMB_PATH)
+
+	await msg.edit("**✅ Custom thumbnail set!** All future videos/documents will use it.")
+
+
+@Client.on_message(filters.command(["delthumb"]) & filters.user(config.config.owner_ids))
+async def del_thumb(client: Client, message):
+	if os.path.exists(THUMB_PATH):
+		os.remove(THUMB_PATH)
+		await client.send_message(message.chat.id, "**🗑 Custom thumbnail removed.**", reply_to_message_id=message.id)
+	else:
+		await client.send_message(message.chat.id, "__No custom thumbnail is currently set.__", reply_to_message_id=message.id)
