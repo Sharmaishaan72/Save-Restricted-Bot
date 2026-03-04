@@ -150,7 +150,8 @@ async def save(client: Client, message):
 		try: toID = int(temp[1].strip())
 		except: toID = fromID
 
-		for msgid in range(fromID, toID + 1):
+		step = 1 if fromID <= toID else -1
+		for msgid in range(fromID, toID + step, step):
 
 			# private
 			if "https://t.me/c/" in message.text:
