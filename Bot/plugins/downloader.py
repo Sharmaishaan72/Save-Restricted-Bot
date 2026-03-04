@@ -7,6 +7,7 @@ import time
 
 from pyrogram import Client
 from pyrogram import filters
+from pyrogram.types import ReplyParameters
 from pyrogram.errors import UserAlreadyParticipant, InviteHashExpired, UsernameNotOccupied
 
 from .. import config 
@@ -41,14 +42,14 @@ async def handle_private(message, chatid, msgid):
 
 	if msg_type == "Text":
 		try:
-			await bot.copy_message(message.chat.id, msg.chat.id, msg.id, reply_to_message_id=message.id)
+			await bot.copy_message(message.chat.id, msg.chat.id, msg.id, reply_parameters=ReplyParameters(message_id=message.id))
 		except:
 			text_to_send = msg.text if msg.text else "** **"
 			entities_to_send = msg.entities if msg.entities else None
-			await bot.send_message(message.chat.id, text_to_send, entities=entities_to_send, reply_to_message_id=message.id)
+			await bot.send_message(message.chat.id, text_to_send, entities=entities_to_send, reply_parameters=ReplyParameters(message_id=message.id))
 		return
 
-	smsg = await bot.send_message(message.chat.id, '__Downloading__\n\n`Starting...`', reply_to_message_id=message.id)
+	smsg = await bot.send_message(message.chat.id, '__Downloading__\n\n`Starting...`', reply_parameters=ReplyParameters(message_id=message.id))
 
 	file = await acc.download_media(
 		msg,
@@ -70,7 +71,7 @@ async def handle_private(message, chatid, msgid):
 			try: thumb, thumb_downloaded = await acc.download_media(msg.document.thumbs[0].file_id), True
 			except: thumb, thumb_downloaded = None, False
 		await bot.send_document(message.chat.id, file, thumb=thumb, caption=caption, caption_entities=caption_entities,
-		                  reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
+		                  reply_parameters=ReplyParameters(message_id=message.id), progress=progress, progress_args=[message, smsg, "up"])
 		if thumb and thumb_downloaded: os.remove(thumb)
 
 	elif msg_type == "Video":
@@ -81,15 +82,15 @@ async def handle_private(message, chatid, msgid):
 			except: thumb, thumb_downloaded = None, False
 		await bot.send_video(message.chat.id, file, duration=msg.video.duration, width=msg.video.width,
 		               height=msg.video.height, thumb=thumb, caption=caption, caption_entities=caption_entities,
-		               reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
+		               reply_parameters=ReplyParameters(message_id=message.id), progress=progress, progress_args=[message, smsg, "up"])
 		if thumb and thumb_downloaded: os.remove(thumb)
 
 	elif msg_type == "Animation":
 		await bot.send_animation(message.chat.id, file, caption=caption, caption_entities=caption_entities,
-		                   reply_to_message_id=message.id)
+		                   reply_parameters=ReplyParameters(message_id=message.id))
 
 	elif msg_type == "Sticker":
-		await bot.send_sticker(message.chat.id, file, reply_to_message_id=message.id)
+		await bot.send_sticker(message.chat.id, file, reply_parameters=ReplyParameters(message_id=message.id))
 
 	elif msg_type == "Voice":
 		if os.path.exists(CUSTOM_THUMB):
@@ -98,7 +99,7 @@ async def handle_private(message, chatid, msgid):
 			try: thumb, thumb_downloaded = (await acc.download_media(msg.voice.thumbs[0].file_id), True) if hasattr(msg.voice, 'thumbs') and msg.voice.thumbs else (None, False)
 			except: thumb, thumb_downloaded = None, False
 		await bot.send_voice(message.chat.id, file, caption=caption, thumb=thumb, caption_entities=caption_entities,
-		               reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
+		               reply_parameters=ReplyParameters(message_id=message.id), progress=progress, progress_args=[message, smsg, "up"])
 		if thumb and thumb_downloaded: os.remove(thumb)
 
 	elif msg_type == "Audio":
@@ -108,12 +109,12 @@ async def handle_private(message, chatid, msgid):
 			try: thumb, thumb_downloaded = await acc.download_media(msg.audio.thumbs[0].file_id), True
 			except: thumb, thumb_downloaded = None, False
 		await bot.send_audio(message.chat.id, file, caption=caption, caption_entities=caption_entities,
-		               reply_to_message_id=message.id, progress=progress, progress_args=[message, smsg, "up"])
+		               reply_parameters=ReplyParameters(message_id=message.id), progress=progress, progress_args=[message, smsg, "up"])
 		if thumb and thumb_downloaded: os.remove(thumb)
 
 	elif msg_type == "Photo":
 		await bot.send_photo(message.chat.id, file, caption=caption, caption_entities=caption_entities,
-		               reply_to_message_id=message.id)
+		               reply_parameters=ReplyParameters(message_id=message.id))
 
 	os.remove(file)
 
@@ -131,18 +132,18 @@ async def save(client: Client, message):
 	# joining chats
 	if "https://t.me/+" in message.text or "https://t.me/joinchat/" in message.text:
 		if acc is None:
-			await client.send_message(message.chat.id, "**String Session is not Set**", reply_to_message_id=message.id)
+			await client.send_message(message.chat.id, "**String Session is not Set**", reply_parameters=ReplyParameters(message_id=message.id))
 			return
 		try:
 			try: await acc.join_chat(message.text)
 			except Exception as e:
-				await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_to_message_id=message.id)
+				await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_parameters=ReplyParameters(message_id=message.id))
 				return
-			await client.send_message(message.chat.id, "**Chat Joined**", reply_to_message_id=message.id)
+			await client.send_message(message.chat.id, "**Chat Joined**", reply_parameters=ReplyParameters(message_id=message.id))
 		except UserAlreadyParticipant:
-			await client.send_message(message.chat.id, "**Chat already Joined**", reply_to_message_id=message.id)
+			await client.send_message(message.chat.id, "**Chat already Joined**", reply_parameters=ReplyParameters(message_id=message.id))
 		except InviteHashExpired:
-			await client.send_message(message.chat.id, "**Invalid Link**", reply_to_message_id=message.id)
+			await client.send_message(message.chat.id, "**Invalid Link**", reply_parameters=ReplyParameters(message_id=message.id))
 
 	# getting message
 	elif "https://t.me/" in message.text:
@@ -159,33 +160,33 @@ async def save(client: Client, message):
 			if "https://t.me/c/" in message.text:
 				chatid = int("-100" + datas[4])
 				if acc is None:
-					await client.send_message(message.chat.id, "**String Session is not Set**", reply_to_message_id=message.id)
+					await client.send_message(message.chat.id, "**String Session is not Set**", reply_parameters=ReplyParameters(message_id=message.id))
 					return
 				try: await handle_private(message, chatid, msgid)
-				except Exception as e: await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_to_message_id=message.id)
+				except Exception as e: await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_parameters=ReplyParameters(message_id=message.id))
 
 			# bot
 			elif "https://t.me/b/" in message.text:
 				username = datas[4]
 				if acc is None:
-					await client.send_message(message.chat.id, "**String Session is not Set**", reply_to_message_id=message.id)
+					await client.send_message(message.chat.id, "**String Session is not Set**", reply_parameters=ReplyParameters(message_id=message.id))
 					return
 				try: await handle_private(message, username, msgid)
-				except Exception as e: await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_to_message_id=message.id)
+				except Exception as e: await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_parameters=ReplyParameters(message_id=message.id))
 
 			# public
 			else:
 				username = datas[3]
 				try: msg = await client.get_messages(username, msgid)
 				except UsernameNotOccupied:
-					await client.send_message(message.chat.id, "**The username is not occupied by anyone**", reply_to_message_id=message.id)
+					await client.send_message(message.chat.id, "**The username is not occupied by anyone**", reply_parameters=ReplyParameters(message_id=message.id))
 					return
-				try: await client.copy_message(message.chat.id, msg.chat.id, msg.id, reply_to_message_id=message.id)
+				try: await client.copy_message(message.chat.id, msg.chat.id, msg.id, reply_parameters=ReplyParameters(message_id=message.id))
 				except:
 					if acc is None:
-						await client.send_message(message.chat.id, "**String Session is not Set**", reply_to_message_id=message.id)
+						await client.send_message(message.chat.id, "**String Session is not Set**", reply_parameters=ReplyParameters(message_id=message.id))
 						return
 					try: await handle_private(message, username, msgid)
-					except Exception as e: await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_to_message_id=message.id)
+					except Exception as e: await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_parameters=ReplyParameters(message_id=message.id))
 
 			time.sleep(3)

@@ -2,6 +2,7 @@ import pyrogram
 from pyrogram import Client
 from pyrogram import filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import ReplyParameters
 
 from .. import config 
 from ..wrappers.access_only import access_only
@@ -60,5 +61,5 @@ async def send_start(client: pyrogram.client.Client, message: pyrogram.types.mes
 		message.chat.id,
 		f"__👋 Hi **{message.from_user.mention}**, I am Save Restricted Bot, I can send you restricted content by it's post link__\n\n{USAGE}",
 		reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🌐 Source Code", url="https://github.com/Sharmaishaan72/Save-Restricted-Bot")]]),
-		reply_to_message_id=message.id
+		reply_parameters=ReplyParameters(message_id=message.id)
 	)
