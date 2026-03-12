@@ -1,6 +1,7 @@
 # all downloader commands
 
 import os
+import asyncio
 
 CUSTOM_THUMB = "thumb.jpg"
 import time
@@ -124,12 +125,32 @@ async def handle_private(message, chatid, msgid):
 
 
 
+
+
+@Client.on_message(filters.command(["stop"]) & filters.user(config.config.owner_ids))
+async def stop_download(client: Client, message):
+	if config.config.active_task and not config.config.active_task.done():
+		config.config.active_task.cancel()
+		await client.send_message(message.chat.id, "**Stopping Running Task(s)...**", reply_parameters=ReplyParameters(message_id=message.id))
+	else:
+		await client.send_message(message.chat.id, "__Nothing is running.__", reply_parameters=ReplyParameters(message_id=message.id))
+
+
 @Client.on_message(filters.regex(r"^(?:https?://)?t\.me/.+$"))
 @access_only
 async def save(client: Client, message):
-	print(message.text)
-	acc = mclient.acc 
+	config.config.active_task = asyncio.current_task()
+	try:
+		await _save(client, message)
+	except asyncio.CancelledError:
+		await client.send_message(message.chat.id, "**⛔ Download stopped.**", reply_parameters=ReplyParameters(message_id=message.id))
+	finally:
+		config.config.active_task = None
+
+
+async def _save(client: Client, message):
 	# joining chats
+	acc = mclient.acc
 	if "https://t.me/+" in message.text or "https://t.me/joinchat/" in message.text:
 		if acc is None:
 			await client.send_message(message.chat.id, "**String Session is not Set**", reply_parameters=ReplyParameters(message_id=message.id))

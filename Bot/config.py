@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 
 def open_config():
     """fetch the latest config , everytime , on reload_env"""
@@ -22,5 +23,6 @@ class Config:
             int(owner_id)
             for owner_id in getenv("OWNER_USERIDS").split(",")
         ]
+        self.active_task: asyncio.Task | None = None
 
 config = Config()
