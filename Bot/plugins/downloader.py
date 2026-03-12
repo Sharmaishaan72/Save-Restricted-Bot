@@ -36,14 +36,17 @@ def get_message_type(msg):
 	try: msg.text;              return "Text"
 	except: pass
 
-async def handle_private(message, chatid, msgid):
+async def handle_private(message, chatid, msgid, forumID = None):
 	acc = mclient.acc 	
 	msg = await acc.get_messages(chatid, msgid)
 	msg_type = get_message_type(msg)
 
+	if forumID and msg.message_thread_id != int(forumID): #bot will now no longer fetch outside forum
+		return 
+
 	if msg_type == "Text":
 		try:
-			await bot.copy_message(message.chat.id, msg.chat.id, msg.id, reply_parameters=ReplyParameters(message_id=message.id))
+			await bot.copy_message(message.chat.id, msg.chat.id, msg.id, reply_parameters=ReplyParameters(message_id=message.id),)
 		except:
 			text_to_send = msg.text if msg.text else "** **"
 			entities_to_send = msg.entities if msg.entities else None
@@ -173,6 +176,12 @@ async def _save(client: Client, message):
 		fromID = int(temp[0].strip())
 		try: toID = int(temp[1].strip())
 		except: toID = fromID
+		isForum = False
+		forumID = None
+
+		if len(datas) >=7 :
+			isForum = True
+			forumID = datas[5]
 
 		step = 1 if fromID <= toID else -1
 		for msgid in range(fromID, toID + step, step):
@@ -183,7 +192,7 @@ async def _save(client: Client, message):
 				if acc is None:
 					await client.send_message(message.chat.id, "**String Session is not Set**", reply_parameters=ReplyParameters(message_id=message.id))
 					return
-				try: await handle_private(message, chatid, msgid)
+				try: await handle_private(message, chatid, msgid, forumID)
 				except Exception as e: await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_parameters=ReplyParameters(message_id=message.id))
 
 			# bot
@@ -210,4 +219,7 @@ async def _save(client: Client, message):
 					try: await handle_private(message, username, msgid)
 					except Exception as e: await client.send_message(message.chat.id, f"**Error** : __{e}__", reply_parameters=ReplyParameters(message_id=message.id))
 
+			# the bot will sleep extra in case of forums due to how telegram handles forums
+			# but this is needed since the bot is still fetching messages , no matter if they're from a specific forum or not. 
+			# the most you can do is remove the wait , or reduce the time the bot sleeps after a single post
 			time.sleep(3)
